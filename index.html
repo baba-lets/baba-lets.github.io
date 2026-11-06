@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Let's Baba</title>
+<meta name="description" content="Presença, potes, times e resultados do baba.">
+<meta name="theme-color" content="#0F4F33">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Baba">
+<style>
+  html,body{margin:0;height:100%;background:#0F4F33;color:#fff;font:600 15px system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}
+  #app{position:fixed;inset:0;width:100%;height:100%;border:0;background:#F6F7F2}
+  #splash{position:fixed;inset:0;display:grid;place-content:center;justify-items:center;gap:14px;background:radial-gradient(130% 90% at 50% 0%,#1D7A4C 0%,#0F4F33 45%,#08301F 100%);z-index:2;transition:opacity .35s}
+  #splash img{width:84px;height:84px;border-radius:22px}
+  #splash.saiu{opacity:0;pointer-events:none}
+  #off{display:none;position:fixed;inset:auto 16px calc(16px + env(safe-area-inset-bottom,0px));background:#D7263D;color:#fff;padding:12px 14px;border-radius:12px;z-index:3}
+  @media (prefers-reduced-motion:reduce){#splash{transition:none}}
+</style>
+</head>
+<body>
+<div id="splash"><img src="icon-192.png" alt=""><div>Carregando o baba…</div></div>
+<iframe id="app" title="Baba" allow="clipboard-write"></iframe>
+<div id="off">Sem internet. O app volta sozinho quando a conexão voltar.</div>
+<script>
+  // Endereço do App da Web publicado no Google Apps Script
+  var APP = 'https://script.google.com/macros/s/AKfycbztNcvV0wwy0Ci0Pj_qR-DGXDsJ-XumIsvdH4zAWiiGEUciIOoFKWb7zxNVuNwvzl1ffA/exec';
+  var frame = document.getElementById('app');
+  frame.src = APP + location.search;
+  frame.addEventListener('load', function () { setTimeout(function () { document.getElementById('splash').className = 'saiu'; }, 900); });
+  setTimeout(function () { document.getElementById('splash').className = 'saiu'; }, 8000);
+
+  // Ponte do login: guarda o acesso nesta página, porque alguns celulares apagam o que fica dentro do Google
+  function origemOk(o) { try { return /\.googleusercontent\.com$/.test(new URL(o).hostname); } catch (e) { return false; } }
+  window.addEventListener('message', function (e) {
+    if (!origemOk(e.origin) || !e.data || typeof e.data !== 'object') return;
+    try {
+      if (e.data.tipo === 'baba:pedir') e.source.postMessage({ tipo: 'baba:token', token: localStorage.getItem('baba_token') }, e.origin);
+      if (e.data.tipo === 'baba:salvar') {
+        if (e.data.token && typeof e.data.token === 'string' && e.data.token.length < 200) localStorage.setItem('baba_token', e.data.token);
+        else localStorage.removeItem('baba_token');
+      }
+    } catch (err) { }
+  });
+
+  function rede() { document.getElementById('off').style.display = navigator.onLine ? 'none' : 'block'; }
+  window.addEventListener('online', rede); window.addEventListener('offline', rede); rede();
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () { });
+</script>
+</body>
+</html>
